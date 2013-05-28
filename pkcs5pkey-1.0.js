@@ -256,7 +256,7 @@ var PKCS5PKEY = function() {
 	    return _parsePKCS5PEM(sPKCS5PEM);
 	},
 	/**
-         * the same function as OpenSSL EVP_BytsToKey to generate shared key and IV
+         * the same function as OpenSSL EVP_BytesToKey to generate shared key and IV
 	 * @name getKeyAndUnusedIvByPasscodeAndIvsalt
 	 * @memberOf PKCS5PKEY
 	 * @function
@@ -279,7 +279,7 @@ var PKCS5PKEY = function() {
 	 * @function
 	 * @param {String} sEncryptedPEM PEM formatted protected passcode protected PKCS#5 private key
 	 * @param {String} passcode passcode to decrypt private key (ex. 'password')
-	 * @return {String} hexadecimal string of decrypted RSA priavte key
+	 * @return {String} hexadecimal string of decrypted RSA private key
 	 */
 	getDecryptedKeyHex: function(sEncryptedPEM, passcode) {
 	    // 1. parse pem
@@ -318,7 +318,7 @@ var PKCS5PKEY = function() {
 
 	/**
          * get PEM formatted encrypted PKCS#5 private key from hexadecimal string of plain private key
-	 * @name getEryptedPKCS5PEMFromPrvKeyHex
+	 * @name getEncryptedPKCS5PEMFromPrvKeyHex
 	 * @memberOf PKCS5PKEY
 	 * @function
 	 * @param {String} hPrvKey hexadecimal string of plain private key
@@ -338,13 +338,13 @@ var PKCS5PKEY = function() {
 	 * </ul>
 	 * @example
 	 * var pem = 
-         *   PKCS5PKEY.getEryptedPKCS5PEMFromPrvKeyHex(plainKeyHex, "password");
+         *   PKCS5PKEY.getEncryptedPKCS5PEMFromPrvKeyHex(plainKeyHex, "password");
 	 * var pem2 = 
-         *   PKCS5PKEY.getEryptedPKCS5PEMFromPrvKeyHex(plainKeyHex, "password", "AES-128-CBC");
+         *   PKCS5PKEY.getEncryptedPKCS5PEMFromPrvKeyHex(plainKeyHex, "password", "AES-128-CBC");
 	 * var pem3 = 
-         *   PKCS5PKEY.getEryptedPKCS5PEMFromPrvKeyHex(plainKeyHex, "password", "AES-128-CBC", "1f3d02...");
+         *   PKCS5PKEY.getEncryptedPKCS5PEMFromPrvKeyHex(plainKeyHex, "password", "AES-128-CBC", "1f3d02...");
 	 */
-	getEryptedPKCS5PEMFromPrvKeyHex: function(hPrvKey, passcode, sharedKeyAlgName, ivsaltHex) {
+	getEncryptedPKCS5PEMFromPrvKeyHex: function(hPrvKey, passcode, sharedKeyAlgName, ivsaltHex) {
 	    var sPEM = "";
 
 	    // 1. set sharedKeyAlgName if undefined (default AES-256-CBC)
@@ -383,7 +383,7 @@ var PKCS5PKEY = function() {
 
 	/**
          * get PEM formatted encrypted PKCS#5 private key from RSAKey object of private key
-	 * @name getEryptedPKCS5PEMFromRSAKey
+	 * @name getEncryptedPKCS5PEMFromRSAKey
 	 * @memberOf PKCS5PKEY
 	 * @function
 	 * @param {RSAKey} pKey RSAKey object of private key
@@ -404,9 +404,9 @@ var PKCS5PKEY = function() {
 	 * @example
 	 * var pkey = new RSAKey();
 	 * pkey.generate(1024, '10001'); // generate 1024bit RSA private key with public exponent 'x010001'
-	 * var pem = PKCS5PKEY.getEryptedPKCS5PEMFromRSAKey(pkey, "password");
+	 * var pem = PKCS5PKEY.getEncryptedPKCS5PEMFromRSAKey(pkey, "password");
 	 */
-        getEryptedPKCS5PEMFromRSAKey: function(pKey, passcode, alg, ivsaltHex) {
+        getEncryptedPKCS5PEMFromRSAKey: function(pKey, passcode, alg, ivsaltHex) {
 	    var version = new KJUR.asn1.DERInteger({'int': 0});
 	    var n = new KJUR.asn1.DERInteger({'bigint': pKey.n});
 	    var e = new KJUR.asn1.DERInteger({'int': pKey.e});
@@ -418,12 +418,12 @@ var PKCS5PKEY = function() {
 	    var coeff = new KJUR.asn1.DERInteger({'bigint': pKey.coeff});
 	    var seq = new KJUR.asn1.DERSequence({'array': [version, n, e, d, p, q, dmp1, dmq1, coeff]});
 	    var hex = seq.getEncodedHex();
-	    return this.getEryptedPKCS5PEMFromPrvKeyHex(hex, passcode, alg, ivsaltHex);
+	    return this.getEncryptedPKCS5PEMFromPrvKeyHex(hex, passcode, alg, ivsaltHex);
         },
 
 	/**
          * generate RSAKey and PEM formatted encrypted PKCS#5 private key
-	 * @name newEryptedPKCS5PEM
+	 * @name newEncryptedPKCS5PEM
 	 * @memberOf PKCS5PKEY
 	 * @function
 	 * @param {String} passcode pass code to protect private key (ex. password)
@@ -437,7 +437,7 @@ var PKCS5PKEY = function() {
 	 * var pem2 = PKCS5PKEY.newEncryptedPKCS5PEM("password", 512);      // RSA 512bit/10001/AES-256-CBC
 	 * var pem3 = PKCS5PKEY.newEncryptedPKCS5PEM("password", 512, '3'); // RSA 512bit/    3/AES-256-CBC
 	 */
-	newEryptedPKCS5PEM: function(passcode, keyLen, hPublicExponent, alg) {
+	newEncryptedPKCS5PEM: function(passcode, keyLen, hPublicExponent, alg) {
 	    if (typeof keyLen == "undefined" || keyLen == null) {
 		keyLen = 1024;
 	    }
@@ -448,9 +448,9 @@ var PKCS5PKEY = function() {
 	    pKey.generate(keyLen, hPublicExponent);
 	    var pem = null;
 	    if (typeof alg == "undefined" || alg == null) {
-		pem = this.getEncryptedPKCS5PEMFromRSAKey(pkey, passcode);
+		pem = this.getEncryptedPKCS5PEMFromRSAKey(pKey, passcode);
 	    } else {
-		pem = this.getEncryptedPKCS5PEMFromRSAKey(pkey, passcode, alg);
+		pem = this.getEncryptedPKCS5PEMFromRSAKey(pKey, passcode, alg);
 	    }
 	    return pem;
         },
@@ -472,8 +472,8 @@ var PKCS5PKEY = function() {
 	    if (! pkcs8PEM.match(/BEGIN PRIVATE KEY/))
                 throw "pkcs8PEM doesn't include 'BEGIN PRIVATE KEY'";
             var s = pkcs8PEM;
-	    s = s.replace(/^-----BEGIN PRIVATE KEY-----/, '');
-	    s = s.replace(/^-----END PRIVATE KEY-----/, '');
+	    s = s.replace(/-----BEGIN PRIVATE KEY-----/, '');
+	    s = s.replace(/-----END PRIVATE KEY-----/, '');
 	    var sB64 = s.replace(/\s+/g, '');
 	    var prvKeyWA = CryptoJS.enc.Base64.parse(sB64);
 	    var prvKeyHex = CryptoJS.enc.Hex.stringify(prvKeyWA);
@@ -494,5 +494,5 @@ var PKCS5PKEY = function() {
 
 	addAlgorithm: function(functionObject, algName, keyLen, ivLen) {
 	}
-    };
+   };
 }();
