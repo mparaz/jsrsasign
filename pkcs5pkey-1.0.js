@@ -158,7 +158,7 @@ var PKCS5PKEY = function() {
 	//alert("nRequiredBytes = " + nRequiredBytes);
 	for (;;) {
 	    var h = CryptoJS.algo.MD5.create();
-	    if (hLastValue != null) {
+	    if (hLastValue !== null) {
 		h.update(hLastValue);
 	    }
 	    h.update(data);
@@ -360,14 +360,14 @@ var PKCS5PKEY = function() {
 	    var sPEM = "";
 
 	    // 1. set sharedKeyAlgName if undefined (default AES-256-CBC)
-	    if (typeof sharedKeyAlgName == "undefined" || sharedKeyAlgName == null) {
+	    if (typeof sharedKeyAlgName == "undefined" || sharedKeyAlgName === null) {
 		sharedKeyAlgName = "AES-256-CBC";
 	    }
 	    if (typeof ALGLIST[sharedKeyAlgName] == "undefined")
 		throw "PKCS5PKEY unsupported algorithm: " + sharedKeyAlgName;
 
 	    // 2. set ivsaltHex if undefined
-	    if (typeof ivsaltHex == "undefined" || ivsaltHex == null) {
+	    if (typeof ivsaltHex == "undefined" || ivsaltHex === null) {
 		var ivlen = ALGLIST[sharedKeyAlgName]['ivlen'];
 		var randIV = _generateIvSaltHex(ivlen);
 		ivsaltHex = randIV.toUpperCase();
@@ -380,6 +380,37 @@ var PKCS5PKEY = function() {
 	    // alert("sharedKeyHex = " + sharedKeyHex);
 
             // 3. get encrypted Key in Base64
+            var encryptedKeyB64 = _encryptKeyHex(hPrvKey, sharedKeyAlgName, sharedKeyHex, ivsaltHex);
+
+	    var pemBody = encryptedKeyB64.replace(/(.{64})/g, "$1\r\n");
+	    var sPEM = "-----BEGIN RSA PRIVATE KEY-----\r\n";
+	    sPEM += "Proc-Type: 4,ENCRYPTED\r\n";
+	    sPEM += "DEK-Info: " + sharedKeyAlgName + "," + ivsaltHex + "\r\n";
+	    sPEM += "\r\n";
+	    sPEM += pemBody;
+	    sPEM += "\r\n-----END RSA PRIVATE KEY-----\r\n";
+
+	    return sPEM;
+        },
+
+	getEncryptedPKCS5PEMFromPrvKeyHexWithKey: function(hPrvKey, sharedKeyHex, sharedKeyAlgName, ivsaltHex) {
+	    var sPEM = "";
+
+	    // 1. set sharedKeyAlgName if undefined (default AES-256-CBC)
+	    if (typeof sharedKeyAlgName == "undefined" || sharedKeyAlgName === null) {
+		sharedKeyAlgName = "AES-256-CBC";
+	    }
+	    if (typeof ALGLIST[sharedKeyAlgName] == "undefined")
+		throw "PKCS5PKEY unsupported algorithm: " + sharedKeyAlgName;
+
+	    // 2. set ivsaltHex if undefined
+	    if (typeof ivsaltHex == "undefined" || ivsaltHex === null) {
+		var ivlen = ALGLIST[sharedKeyAlgName]['ivlen'];
+		var randIV = _generateIvSaltHex(ivlen);
+		ivsaltHex = randIV.toUpperCase();
+	    }
+
+	                // 3. get encrypted Key in Base64
             var encryptedKeyB64 = _encryptKeyHex(hPrvKey, sharedKeyAlgName, sharedKeyHex, ivsaltHex);
 
 	    var pemBody = encryptedKeyB64.replace(/(.{64})/g, "$1\r\n");
@@ -450,16 +481,16 @@ var PKCS5PKEY = function() {
 	 * var pem3 = PKCS5PKEY.newEncryptedPKCS5PEM("password", 512, '3'); // RSA 512bit/    3/AES-256-CBC
 	 */
 	newEncryptedPKCS5PEM: function(passcode, keyLen, hPublicExponent, alg) {
-	    if (typeof keyLen == "undefined" || keyLen == null) {
+	    if (typeof keyLen == "undefined" || keyLen === null) {
 		keyLen = 1024;
 	    }
-	    if (typeof hPublicExponent == "undefined" || hPublicExponent == null) {
+	    if (typeof hPublicExponent == "undefined" || hPublicExponent === null) {
 		hPublicExponent = '10001';
 	    }
 	    var pKey = new RSAKey();
 	    pKey.generate(keyLen, hPublicExponent);
 	    var pem = null;
-	    if (typeof alg == "undefined" || alg == null) {
+	    if (typeof alg == "undefined" || alg === null) {
 		pem = this.getEncryptedPKCS5PEMFromRSAKey(pKey, passcode);
 	    } else {
 		pem = this.getEncryptedPKCS5PEMFromRSAKey(pKey, passcode, alg);
